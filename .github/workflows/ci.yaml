@@ -59,3 +59,62 @@ jobs:
         run: |
           git diff --name-only --exit-code go.mod || ( echo "Run go tidy" && false )
           git diff --name-only --exit-code go.sum || ( echo "Run go tidy" && false )
+  aws:
+    environment: EKS
+    name: Amazon Elastic Kubernetes Service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout deployments
+        uses: actions/checkout@v2
+        with:
+          repository: glazychev-art/deployments-k8s
+          ref: forw_test
+          path: networkservicemesh/deployments-k8s
+      - name: Checkout files
+        uses: actions/checkout@v2
+        with:
+          path: ${{ github.repository }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+      - name: aws-iam-authenticator install
+        working-directory: ${{ github.repository }}
+        run: |
+          ./scripts/aws-init.sh
+          echo "$HOME/bin" >> $GITHUB_PATH
+      - name: Set up /bin permissions
+        run: |
+          sudo chmod -R 777 /bin
+      - name: Set up go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.16
+      - name: Install cloudtest
+        run: |
+          go get github.com/networkservicemesh/cloudtest@master
+        env:
+          GO111MODULE: on
+          GOBIN: /bin
+      - name: Run tests with cloudtest
+        working-directory: ${{ github.repository }}
+        run: |
+          cloudtest
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Publish test report
+        uses: mikepenz/action-junit-report@v2.1.0
+        if: ${{ always() }}
+        with:
+          report_paths: "**/cloud_test/results/junit.xml"
+          suite_regex: "Test*"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload logs
+        uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: logs-${{ github.run_number }}
+          path: ${{ github.repository }}/.tests/cloud_test/
