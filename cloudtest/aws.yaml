@@ -9,7 +9,7 @@ providers:
     enabled: true
     timeout: 3600  # 60 minutes to start cluster
     env:
-      - AWS_CLUSTER_NAME=$(cluster-name)-$(date)-${GITHUB_RUN_NUMBER}-$(rands10)
+      - AWS_CLUSTER_NAME=long-ci-test
       - KUBECONFIG=$(tempdir)/config
       - NSM_AWS_SERVICE_SUFFIX=${AWS_CLUSTER_NAME}
     env-check:
@@ -20,6 +20,4 @@ providers:
       start: |
         scripts/aws-start.sh
       stop: |
-        scripts/aws-destroy.sh
       cleanup: |
-        scripts/destroy-old-clusters.sh 4 "^aws"
