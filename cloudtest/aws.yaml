@@ -16,6 +16,7 @@ providers:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - GITHUB_RUN_NUMBER
+      - KUBERNETES_VERSION
     scripts:
       start: |
         scripts/aws-start.sh

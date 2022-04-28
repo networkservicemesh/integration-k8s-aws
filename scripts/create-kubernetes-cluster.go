@@ -149,7 +149,7 @@ func (ac *AWSCluster) createEksCluster(eksClient *eks.EKS, clusterName, eksRoleA
 			EndpointPrivateAccess: aws.Bool(true),
 			EndpointPublicAccess:  aws.Bool(true),
 		},
-		Version: aws.String("1.18"),
+		Version: aws.String(os.Getenv("KUBERNETES_VERSION")),
 	})
 	ac.checkError(err)
 
