@@ -11,9 +11,9 @@ curl -o aws-iam-authenticator https://s3.us-west-2.amazonaws.com/amazon-eks/1.21
     mv ./aws-iam-authenticator /usr/local/bin
 
 eksctl create cluster  \
-      --name ${AWS_CLUSTER_NAME} \
+      --name "${AWS_CLUSTER_NAME}" \
       --version 1.22 \
-      --nodegroup-name ${AWS_CLUSTER_NAME}-workers \
+      --nodegroup-name "${AWS_CLUSTER_NAME}-workers" \
       --node-type t2.xlarge \
-      --nodes 2
-      --kubeconfig ${KUBECONFIG}
+      --nodes 2 \
+      --kubeconfig "${KUBECONFIG}"
