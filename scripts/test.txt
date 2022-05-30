@@ -1,5 +1,0 @@
-2022-05-28 16:57:49 [ℹ]  eksctl version 0.97.0
-2022-05-28 16:57:49 [ℹ]  using region us-west-2
-NAME		REGION		EKSCTL CREATED
-aws-cluster1	us-west-2	True
-aws-cluster2    us-west-2   sTrue

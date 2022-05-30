@@ -14,7 +14,7 @@ eksctl create cluster  \
       --name "${AWS_CLUSTER_NAME}" \
       --version 1.22 \
       --nodegroup-name "${AWS_CLUSTER_NAME}-workers" \
-      --node-type t2.xlarge \
+      --node-type t3.xlarge \
       --nodes 2
 
 curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
