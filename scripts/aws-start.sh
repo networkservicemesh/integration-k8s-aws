@@ -15,5 +15,4 @@ eksctl create cluster  \
       --version 1.22 \
       --nodegroup-name "${AWS_CLUSTER_NAME}-workers" \
       --node-type t2.xlarge \
-      --nodes 2 \
-      --kubeconfig "${KUBECONFIG}"
+      --nodes 2
