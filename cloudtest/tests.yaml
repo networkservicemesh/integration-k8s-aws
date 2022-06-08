@@ -4,7 +4,7 @@ executions:
     env:
       - ARTIFACTS_ARCHIVE=true
     root: ./
-    timeout: 3600
+    timeout: 7200
     cluster-count: 1
     cluster-selector:
       - aws
