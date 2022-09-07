@@ -87,18 +87,20 @@ jobs:
           go-version: 1.16
       - name: Setup kind
         uses: engineerd/setup-kind@v0.5.0
+        with:
+          image: kindest/node:v1.24.0
       - name: Run tests with clusterctl on AWS
         working-directory: ${{ github.repository }}
         run: |
           kubectl cluster-info
           curl -L https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.2.1/clusterctl-linux-amd64 -o clusterctl
           chmod +x ./clusterctl
-          sudo mv ./clusterctl /usr/local/bin/clusterctl
+          mv ./clusterctl /usr/local/bin/clusterctl
           clusterctl version
           export CLUSTER_TOPOLOGY=true
           curl -L https://github.com/kubernetes-sigs/cluster-api-provider-aws/releases/download/v1.5.0/clusterawsadm-linux-amd64 -o clusterawsadm
           chmod +x clusterawsadm
-          sudo mv clusterawsadm /usr/local/bin
+          mv clusterawsadm /usr/local/bin
           clusterawsadm version
           clusterawsadm bootstrap iam create-cloudformation-stack
           export AWS_B64ENCODED_CREDENTIALS=$(clusterawsadm bootstrap credentials encode-as-profile)
