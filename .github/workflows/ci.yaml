@@ -122,6 +122,12 @@ jobs:
           clusterctl describe cluster aws-testing
           kubectl get kubeadmcontrolplanes
           clusterctl get kubeconfig aws-testing > aws-testing.kubeconfig
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
+          AWS_CONTROL_PLANE_MACHINE_TYPE: t3.xlarge
+          AWS_NODE_MACHINE_TYPE: t3.xlarge
       - name: Run integration tests
         working-directory: ${{ github.repository }}
         run: |
