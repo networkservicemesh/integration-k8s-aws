@@ -108,8 +108,7 @@ jobs:
       - name: Setup aws cluster
         working-directory: ${{ github.repository }}
         run: |
-          export CLUSTER_TOPOLOGY=true
-          clusterawsadm bootstrap iam create-cloudformation-stack
+          clusterawsadm bootstrap iam create-cloudformation-stack -v
           export AWS_B64ENCODED_CREDENTIALS=$(clusterawsadm bootstrap credentials encode-as-profile)
           clusterctl init --infrastructure aws
           clusterctl generate cluster aws-testing --flavor development \
