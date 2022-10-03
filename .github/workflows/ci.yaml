@@ -69,11 +69,6 @@ jobs:
     name: Amazon Elastic Kubernetes Service
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout deployments
-        uses: actions/checkout@v2
-        with:
-          repository: networkservicemesh/deployments-k8s
-          path: networkservicemesh/deployments-k8s
       - name: Checkout files
         uses: actions/checkout@v2
         with:
@@ -85,30 +80,58 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.16
-      - name: Install cloudtest
-        run: |
-          go get github.com/networkservicemesh/cloudtest@master
-        env:
-          GO111MODULE: on
-          GOBIN: /bin
-      - name: Run tests with cloudtest
+      - name: Install deps
         working-directory: ${{ github.repository }}
         run: |
-          cloudtest
+          apt-get update && apt-get -y install curl dnsutils
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          mv /tmp/eksctl /usr/local/bin
+          eksctl version
+
+          curl -o aws-iam-authenticator https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.2/2021-07-05/bin/linux/amd64/aws-iam-authenticator
+          chmod 755 aws-iam-authenticator
+          mv ./aws-iam-authenticator /usr/local/bin
+
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
+          chmod +x kubectl
+          mkdir -p ~/.local/bin
+          mv ./kubectl ~/.local/bin/kubectl
+          kubectl version --client
+      - name: Create clusters
+        working-directory: ${{ github.repository }}
+        run: |
+          eksctl create cluster  \
+                --name "${AWS_CLUSTER_NAME}" \
+                --version 1.22 \
+                --nodegroup-name "${AWS_CLUSTER_NAME}-workers" \
+                --node-type t3.xlarge \
+                --nodes 2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-2
-      - name: Publish test report
-        uses: mikepenz/action-junit-report@v2.1.0
+          AWS_CLUSTER_NAME: aws-${{ github.run_id }}-${{ github.run_number }}
+      - name: Run tests
+        working-directory: ${{ github.repository }}
+        run: |
+          go test -count 1 -timeout 1h55m -race -v ./...
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
+      - name: Cleanup
         if: ${{ always() }}
-        with:
-          report_paths: "**/cloud_test/results/junit.xml"
-          suite_regex: "Test*"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: ${{ github.repository }}
+        run: |
+          eksctl delete cluster --name "${AWS_CLUSTER_NAME}"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
+          AWS_CLUSTER_NAME: aws-${{ github.run_id }}-${{ github.run_number }}
       - name: Upload logs
         uses: actions/upload-artifact@v2
         if: ${{ always() }}
         with:
           name: logs-${{ github.run_number }}
-          path: ${{ github.repository }}/.tests/cloud_test/
+          path: ${{ github.repository }}/logs
