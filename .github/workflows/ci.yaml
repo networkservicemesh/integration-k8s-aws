@@ -25,6 +25,12 @@ jobs:
     environment: EKS
     name: Amazon Elastic Kubernetes Service
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ip_family:
+          - ipv4
+          - ipv6
     steps:
       - name: Checkout files
         uses: actions/checkout@v2
@@ -57,22 +63,22 @@ jobs:
       - name: Create clusters
         working-directory: ${{ github.repository }}
         run: |
-          eksctl create cluster  \
-                --name "${AWS_CLUSTER_NAME}" \
-                --version 1.22 \
-                --nodegroup-name "${AWS_CLUSTER_NAME}-workers" \
-                --node-type t3.xlarge \
-                --nodes 2
+          sed -i "s/NSM_CLUSTER_NAME/$AWS_CLUSTER_NAME/g" aws-${{ matrix.ip_family }}.yaml
+          sed -i "s/NSM_REGION/$AWS_REGION/g" aws-${{ matrix.ip_family }}.yaml
+          sed -i "s/NSM_NODEGROUPS_NAME/$AWS_CLUSTER_NAME-workers/g" aws-${{ matrix.ip_family }}.yaml
+          eksctl create cluster -f aws-${{ matrix.ip_family }}.yaml
+          kubectl get pods -A -o wide
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-2
-          AWS_CLUSTER_NAME: aws-${{ github.run_id }}-${{ github.run_number }}
+          AWS_CLUSTER_NAME: aws-${{ github.run_id }}-${{ github.run_number }}-${{ matrix.ip_family }}
       - name: Run tests
         working-directory: ${{ github.repository }}
         run: |
           go test -count 1 -timeout 1h55m -race -v ./...
         env:
+          ARTIFACTS_DIR: logs-${{ matrix.ip_family }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-2
@@ -80,15 +86,15 @@ jobs:
         if: ${{ always() }}
         working-directory: ${{ github.repository }}
         run: |
-          eksctl delete cluster --name "${AWS_CLUSTER_NAME}"
+          eksctl delete cluster -f aws-${{ matrix.ip_family }}.yaml
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-2
-          AWS_CLUSTER_NAME: aws-${{ github.run_id }}-${{ github.run_number }}
+          AWS_CLUSTER_NAME: aws-${{ github.run_id }}-${{ github.run_number }}-${{ matrix.ip_family }}
       - name: Upload logs
         uses: actions/upload-artifact@v2
         if: ${{ always() }}
         with:
-          name: logs-${{ github.run_number }}
-          path: ${{ github.repository }}/logs
+          name: aws-logs-${{ github.run_number }}-${{ matrix.ip_family }}
+          path: ${{ github.repository }}/logs-${{ matrix.ip_family }}
