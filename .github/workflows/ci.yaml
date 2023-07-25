@@ -76,7 +76,7 @@ jobs:
       - name: Run tests
         working-directory: ${{ github.repository }}
         run: |
-          go test -count 1 -timeout 1h55m -race -v ./...
+          go test -count 1 -timeout 1h55m -race -v ./... -parallel 4
         env:
           ARTIFACTS_DIR: logs-${{ matrix.ip_family }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
