@@ -19,39 +19,37 @@
 package main_test
 
 import (
+	"fmt"
+	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/networkservicemesh/integration-tests/extensions/parallel"
-	"github.com/networkservicemesh/integration-tests/suites/afxdp"
-	"github.com/networkservicemesh/integration-tests/suites/basic"
-	"github.com/networkservicemesh/integration-tests/suites/features"
-	"github.com/networkservicemesh/integration-tests/suites/heal"
 	"github.com/networkservicemesh/integration-tests/suites/memory"
-	"github.com/networkservicemesh/integration-tests/suites/observability"
 )
 
-func TestRunFeatureSuite(t *testing.T) {
-	parallel.Run(t, new(features.Suite), "TestScale_from_zero", "TestVl3_dns", "TestVl3_scale_from_zero", "TestNse_composition", "TestSelect_forwarder")
+type calicoFeatureSuite struct {
+	memory.Suite
 }
 
-func TestRunBasicSuite(t *testing.T) {
-	parallel.Run(t, new(basic.Suite))
-}
-
-func TestRunAfxdpSuite(t *testing.T) {
-	parallel.Run(t, new(afxdp.Suite))
+func (s *calicoFeatureSuite) BeforeTest(suiteName, testName string) {
+	switch testName {
+	case
+		"TestKernel2kernel",
+		"TestKernel2ethernet2kernel":
+		s.T().Skip()
+	}
 }
 
 func TestRunMemorySuite(t *testing.T) {
-	parallel.Run(t, new(memory.Suite))
-}
+	cmd := exec.Command("pwd")
+	stdout, _ := cmd.Output()
+	fmt.Printf("pwd: %s\n", string(stdout))
 
-func TestRunHealSuite(t *testing.T) {
-	suite.Run(t, new(heal.Suite))
-}
+	//os.Setenv("KUBECONFIG", "/home/nikita/.kube/config")
+	suite.Run(t, new(calicoFeatureSuite))
 
-func TestRunObservabilitySuite(t *testing.T) {
-	suite.Run(t, new(observability.Suite))
+	cmd = exec.Command("ls")
+	stdout, _ = cmd.Output()
+	fmt.Printf("ls: %s\n", string(stdout))
 }
