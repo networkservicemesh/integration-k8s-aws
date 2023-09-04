@@ -15,7 +15,7 @@ AWS_CLUSTER_NAME
 ```bash
 eksctl create cluster  \
     --name "${AWS_CLUSTER_NAME}" \
-    --version 1.22 \
+    --version 1.27 \
     --nodegroup-name "${AWS_CLUSTER_NAME}-workers" \
     --node-type t3.xlarge \
     --nodes 2
