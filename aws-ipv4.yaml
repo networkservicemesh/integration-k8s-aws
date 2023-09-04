@@ -5,7 +5,7 @@ kind: ClusterConfig
 metadata:
   name: NSM_CLUSTER_NAME
   region: NSM_REGION
-  version: "1.22"
+  version: "1.27"
 
 kubernetesNetworkConfig:
   ipFamily: IPv4
