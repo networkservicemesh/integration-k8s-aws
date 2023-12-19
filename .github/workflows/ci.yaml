@@ -86,7 +86,7 @@ jobs:
         if: ${{ always() }}
         working-directory: ${{ github.repository }}
         run: |
-          eksctl delete cluster -f aws-${{ matrix.ip_family }}.yaml
+          eksctl delete cluster -f aws-${{ matrix.ip_family }}.yaml --disable-nodegroup-eviction
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
