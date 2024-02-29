@@ -66,13 +66,16 @@ jobs:
           sed -i "s/NSM_CLUSTER_NAME/$AWS_CLUSTER_NAME/g" aws-${{ matrix.ip_family }}.yaml
           sed -i "s/NSM_REGION/$AWS_REGION/g" aws-${{ matrix.ip_family }}.yaml
           sed -i "s/NSM_NODEGROUPS_NAME/$AWS_CLUSTER_NAME-workers/g" aws-${{ matrix.ip_family }}.yaml
+          sed -i "s/NSM_K8S_VERSION/$AWS_K8S_VERSION/g" aws-${{ matrix.ip_family }}.yaml
           eksctl create cluster -f aws-${{ matrix.ip_family }}.yaml
           kubectl get pods -A -o wide
+          kubectl version
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-2
           AWS_CLUSTER_NAME: aws-${{ github.run_id }}-${{ github.run_number }}-${{ matrix.ip_family }}
+          AWS_K8S_VERSION: ${{ vars.NSM_KUBERNETES_VERSION }}
       - name: Run tests
         working-directory: ${{ github.repository }}
         run: |
