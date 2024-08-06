@@ -55,18 +55,21 @@ jobs:
           chmod 755 aws-iam-authenticator
           mv ./aws-iam-authenticator /usr/local/bin
 
-          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/${{ vars.NSM_KUBERNETES_VERSION }}/bin/linux/amd64/kubectl
           chmod +x kubectl
           mkdir -p ~/.local/bin
           mv ./kubectl ~/.local/bin/kubectl
           kubectl version --client
+          eksctl version
       - name: Create clusters
         working-directory: ${{ github.repository }}
         run: |
+          AWS_K8S_VERSION=$(echo $AWS_K8S_VERSION | cut -d '.' -f 1,2 | cut -c 2-)
+          echo $AWS_K8S_VERSION
           sed -i "s/NSM_CLUSTER_NAME/$AWS_CLUSTER_NAME/g" aws-${{ matrix.ip_family }}.yaml
           sed -i "s/NSM_REGION/$AWS_REGION/g" aws-${{ matrix.ip_family }}.yaml
           sed -i "s/NSM_NODEGROUPS_NAME/$AWS_CLUSTER_NAME-workers/g" aws-${{ matrix.ip_family }}.yaml
-          sed -i "s/NSM_K8S_VERSION/$AWS_K8S_VERSION/g" aws-${{ matrix.ip_family }}.yaml
+          sed -i "s/NSM_K8S_VERSION/\"$AWS_K8S_VERSION\"/g" aws-${{ matrix.ip_family }}.yaml
           eksctl create cluster -f aws-${{ matrix.ip_family }}.yaml
           kubectl get pods -A -o wide
           kubectl version
