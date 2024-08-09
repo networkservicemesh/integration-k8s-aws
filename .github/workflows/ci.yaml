@@ -51,23 +51,25 @@ jobs:
           mv /tmp/eksctl /usr/local/bin
           eksctl version
 
-          curl -o aws-iam-authenticator https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.2/2021-07-05/bin/linux/amd64/aws-iam-authenticator
+          curl -Lo aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.6.22/aws-iam-authenticator_0.6.22_$(uname -s)_amd64
           chmod 755 aws-iam-authenticator
           mv ./aws-iam-authenticator /usr/local/bin
 
-          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/${{ vars.NSM_KUBERNETES_VERSION }}/bin/linux/amd64/kubectl
           chmod +x kubectl
           mkdir -p ~/.local/bin
           mv ./kubectl ~/.local/bin/kubectl
-          kubectl version --client
       - name: Create clusters
         working-directory: ${{ github.repository }}
         run: |
+          AWS_K8S_VERSION=$(echo ${{ vars.NSM_KUBERNETES_VERSION }} | cut -d '.' -f 1,2 | cut -c 2-)
           sed -i "s/NSM_CLUSTER_NAME/$AWS_CLUSTER_NAME/g" aws-${{ matrix.ip_family }}.yaml
           sed -i "s/NSM_REGION/$AWS_REGION/g" aws-${{ matrix.ip_family }}.yaml
           sed -i "s/NSM_NODEGROUPS_NAME/$AWS_CLUSTER_NAME-workers/g" aws-${{ matrix.ip_family }}.yaml
+          sed -i "s/NSM_K8S_VERSION/\"$AWS_K8S_VERSION\"/g" aws-${{ matrix.ip_family }}.yaml
           eksctl create cluster -f aws-${{ matrix.ip_family }}.yaml
           kubectl get pods -A -o wide
+          kubectl version
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
