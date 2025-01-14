@@ -1,9 +1,11 @@
 module github.com/networkservicemesh/integration-k8s-aws
 
-go 1.20
+go 1.23
+
+toolchain go1.23.3
 
 require (
-	github.com/networkservicemesh/integration-tests v0.0.0-20240819095428-05eab8719e5b
+	github.com/networkservicemesh/integration-tests v1.14.2-rc.4
 	github.com/stretchr/testify v1.8.4
 )
 
